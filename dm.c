@@ -31,7 +31,9 @@
 #include <unistd.h>
 #include <time.h>
 #include <string.h>
+#include <stdio.h>
 
+#define BUFSIZE 1024
 
 void nodm_display_manager_init(struct nodm_display_manager* dm)
 {
@@ -127,6 +129,57 @@ int nodm_display_manager_restart(struct nodm_display_manager* dm)
 
 int nodm_display_manager_stop(struct nodm_display_manager* dm)
 {
+    //Close first gracefully other programs that depend on Xsession, that might still be running when doing fast shutdown
+    const char* proc_names = getenv_with_default("NODM_PREKILL", "");
+    {
+        char cmd[BUFSIZE] = "pkill ";
+        strcat(cmd,proc_names);
+        FILE *fp;
+        if ((fp = popen(cmd, "r")) == NULL) {
+            printf("Error opening pipe!\n");
+        }
+        else {
+            char buf[BUFSIZE] = "";
+            while (fgets(buf, BUFSIZE, fp) != NULL) {
+                printf("OUTPUT: %s", buf);
+            }
+            if(pclose(fp))  {
+                printf("Command not found or exited with error status\n");
+            }
+        }
+    }
+    //Wait some time for the programs to disappear
+    {
+        char cmd[BUFSIZE] = "pidof ";
+        strcat(cmd,proc_names);
+        const int nIterations = atoi(getenv_with_default("NODM_PREKILL_ITER", "10"));
+        const int seconds = atoi(getenv_with_default("NODM_PREKILL_WAIT", "1"));
+        struct timespec tosleep = { .tv_sec = seconds, .tv_nsec = 0 };
+        struct timespec remaining;
+        for (int i=0; i < nIterations; i++)
+        {
+            int r = nanosleep(&tosleep, &remaining);
+            if (r == -1)
+                printf("Sleep interrupted by signal handler or error\n");
+            FILE *fp;
+            if ((fp = popen(cmd, "r")) == NULL) {
+                printf("Error opening pipe!\n");
+            }
+            else {
+                char buf[BUFSIZE] = "";
+                char accbuf[2*BUFSIZE] = "";
+                while (fgets(buf, BUFSIZE, fp) != NULL) {
+                    printf("OUTPUT: %s", buf);
+                    strcat(accbuf,buf);
+                }
+
+                if(pclose(fp))  {
+                    printf("Command not found or exited with error status\n");
+                }
+            }
+        }
+    }
+
     int res = nodm_xsession_stop(&dm->session);
     if (res != E_SUCCESS) return res;
 
@@ -369,8 +422,8 @@ int nodm_display_manager_wait_restart_loop(struct nodm_display_manager* dm)
         time_t end = time(NULL);
         nodm_display_manager_stop(dm);
 
-	if (quit_signal_caught)
-	    res = E_USER_QUIT;
+        if (quit_signal_caught)
+            res = E_USER_QUIT;
 
         switch (res)
         {

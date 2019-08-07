@@ -80,6 +80,17 @@ Configuration is made via these environment variables:
  * `NODM_X_TIMEOUT`
     Timeout (in seconds) to wait for X to be ready to accept connections. If X is
     not ready before this timeout, it is killed and restarted.
+ * `NODM_PREKILL`
+    Name of processes to be killed via 'pkill' before X session is ended quickly
+    during shutdown or restart, separated by spaces.
+ * `NODM_PREKILL_ITER`
+    Number of iterations to wait for pkilled $NODM_PREKILL programs to actually
+    finish. An iteration sleeps for $NODM_PREKILL_WAIT seconds until checking
+    again via 'pidof $NODM_PREKILL'
+ * `NODM_PREKILL_WAIT`
+    Number of seconds to wait in each iteration when calling pkill $NODM_PREKILL,
+    and checking if the did finish via 'pidof $NODM_PREKILL'
+
 
 ## Compilation
 
