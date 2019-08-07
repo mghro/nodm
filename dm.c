@@ -172,9 +172,12 @@ int nodm_display_manager_stop(struct nodm_display_manager* dm)
                     printf("OUTPUT: %s", buf);
                     strcat(accbuf,buf);
                 }
-
                 if(pclose(fp))  {
                     printf("Command not found or exited with error status\n");
+                }
+                if(accbuf[0] = '\0')//Programs finished
+                {
+                    break;
                 }
             }
         }
