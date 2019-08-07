@@ -80,3 +80,11 @@ Configuration is made via these environment variables:
  * `NODM_X_TIMEOUT`
     Timeout (in seconds) to wait for X to be ready to accept connections. If X is
     not ready before this timeout, it is killed and restarted.
+
+## Compilation
+
+Clone repository, enter to it via a terminal and type
+
+ * ./autogen.sh
+ * ./configure
+ * make
