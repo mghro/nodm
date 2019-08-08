@@ -96,6 +96,7 @@ Configuration is made via these environment variables:
 
 Clone repository, enter to it via a terminal and type
 
+ * sudo apt install help2man
  * ./autogen.sh
  * ./configure
  * make
